@@ -1,46 +1,40 @@
-import Head from 'next/head';
-import Layout, { siteTitle } from '../components/layout';
-import utilStyles from '../styles/utils.module.css';
-import { getSortedPostsData } from '../lib/posts';
-import Link from 'next/link';
-import Date from '../components/date';
+// pages/index.js
 
-export default function Home({ allPostsData }) {
-  return (
-    <Layout home>
-      <Head>
-        <title>{siteTitle}</title>
-      </Head>
-      <section className={utilStyles.headingMd}>
-        <p>[Your Self Introduction]</p>
-        <p>
-          (This is a sample website - you’ll be building a site like this in{' '}
-          <a href="https://nextjs.org/learn">our Next.js tutorial</a>.)
-        </p>
-      </section>
-      <section className={`${utilStyles.headingMd} ${utilStyles.padding1px}`}>
-        <h2 className={utilStyles.headingLg}>Blog</h2>
-        <ul className={utilStyles.list}>
-          {allPostsData.map(({ id, date, title }) => (
-            <li className={utilStyles.listItem} key={id}>
-              <Link href={`/posts/${id}`}>{title}</Link>
-              <br />
-              <small className={utilStyles.lightText}>
-                <Date dateString={date} />
-              </small>
-            </li>
-          ))}
-        </ul>
-      </section>
-    </Layout>
-  );
-}
+import React, { useEffect, useState } from "react";
+import CarList from "../components/CarList";
+import CarForm from "../components/CarForm";
+import CarPage from "../components/CarPage";
 
-export async function getStaticProps() {
-  const allPostsData = getSortedPostsData();
-  return {
-    props: {
-      allPostsData,
-    },
+const Home = () => {
+  const [cars, setCars] = useState([]);
+
+  useEffect(() => {
+    fetch("/api/cars")
+      .then((response) => response.json())
+      .then((data) => setCars(data))
+      .catch((error) => console.error("Error fetching cars:", error));
+  }, []);
+
+  const addCar = (newCar) => {
+    fetch("/api/cars", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(newCar)
+    })
+      .then((response) => response.json())
+      .then((data) => setCars([...cars, data]))
+      .catch((error) => console.error("Error adding car:", error));
   };
-}
+
+  return (
+    <div>
+      <CarForm onAddCar={addCar} />
+      <CarList cars={cars} />
+      <CarPage />
+    </div>
+  );
+};
+
+export default Home;
